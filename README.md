@@ -1,7 +1,7 @@
-Role Name
+ns-home-nas
 =========
 
-A brief description of the role goes here.
+This role sets up my home nas server.
 
 Requirements
 ------------
@@ -11,21 +11,33 @@ Any pre-requisites that may not be covered by Ansible itself or the role should 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+There's one major variable, `sudo_users`, which can have as many users as you'd like. Each user has four properties: `username`, `upasswd`, `passwd` and `uid`, each of which correspond to a property of each user.
+
+Example:
+
+    sudo_users:
+      - username: bob
+        upasswd: bobs_password
+        passwd: $6$bobs_salt$V4zX9pmG52IUH1y6hjLu8ji9bY3ABpumRnGcped5iFaQFVQ.3gmOS8CySNSIFV2SLdNQ2wbLwux9EcYusE1AA0
+        uid: 1001
+      - username: jane
+        upasswd: janes_password
+        passwd: $6$janes_salt$KZRrF9P7aQYGvq1m8cB.Q8GFCcB5RTVE8LNEQN4vQ4hsM1qM6nxl8rVKhq8lM5ybO0nlpeRSy2Lo1NVhtyTaU0
+        uid: 1002
+
+**Security note:** Don't change the values in `defaults/main.yml` and don't put them in `vars`, either! Instead, put them in your "secrets" file (e.g., `/srv/ansible/group_vars/all/secrets.yml`) and/or encrypt them using `ansible-vault`.
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+No known dependencies
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
     - hosts: servers
       roles:
-         - { role: username.rolename, x: 42 }
+         - { role: bitsandbooks.ns-home-nas }
 
 License
 -------
@@ -35,4 +47,4 @@ BSD
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+By [Rob Dumas](https://github.com/bitsandbooks)
