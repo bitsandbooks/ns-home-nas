@@ -1,0 +1,201 @@
+---
+- name: ubuntu - ensure necessary packages are installed
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - aufs-tools
+    - avahi-daemon
+    - samba
+    - smartmontools # provides smartctl
+    - ufw
+    - whois # provides mkpasswd
+    - zfsutils-linux
+  notify:
+    - start samba
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - packages
+
+- name: ubuntu - ensure ufw is active
+  ufw: 
+    state: enabled
+    policy: allow
+    logging: on
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - firewall
+    - ufw
+
+- name: ubuntu - ensure default services are available
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.protocol }}"
+  with_items:
+    - port: 22
+      protocol: "tcp"
+    - port: 80
+      protocol: "tcp"
+    - port: 443
+      protocol: "tcp"
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - firewall
+    - ufw
+
+- name: ubuntu - ensure apcupsd is installed
+  apt:
+    name: apcupsd
+    state: present
+  notify: 
+    - start apcupsd
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - ups
+    - apcupsd
+
+- name: ubuntu - ensure presence of apcupsd config file
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+  notify: 
+    - restart apcupsd
+  with_items:
+    - src: apcupsd.conf
+      dest: /etc/apcupsd/apcupsd.conf
+    - src: apcupsd.default
+      dest: /etc/default/apcupsd
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - ups
+    - apcupsd
+
+- name: ubuntu - ensure presence of folders for mounts
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+  with_items:
+    - /srv/media
+    - /srv/sites
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - mounts
+
+- name: ubuntu - ensure presence of systemd files for mounts
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+  with_items:
+    - src: srv-media.mount
+      dest: /etc/systemd/system/srv-media.mount
+    - src: srv-sites.mount
+      dest: /etc/systemd/system/srv-sites.mount
+    - src: srv-media.automount
+      dest: /etc/systemd/system/srv-media.automount
+    - src: srv-sites.automount
+      dest: /etc/systemd/system/srv-sites.automount
+  notify:
+    - enable srv-media
+    - enable srv-sites
+    - start srv-media
+    - start srv-sites
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - mounts
+
+- name: ubuntu - ensure share symlinks for users exist
+  file:
+    name: "/srv/{{ item.username }}"
+    src: "/home/{{ item.username }}"
+    state: link
+  with_items: "{{ sudo_users }}"
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - mounts
+    - samba
+
+- name: ubuntu - ensure samba config files are in place
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: avahi-samba.xml
+      dest: /etc/avahi/services/smbd.service
+    - src: smb.conf
+      dest: /etc/samba/smb.conf
+  notify: restart samba
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - avahi
+    - samba
+
+- name: ubuntu - ensure users are in the samba password file
+  shell: "(echo {{ item.upasswd }}; echo {{ item.upasswd }}) | smbpasswd -s -a {{ item.username }}"
+  with_items: "{{ sudo_users }}"
+  notify: restart samba
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - samba
+
+- name: ubuntu - ensure samba services can get through the firewall
+  ufw:
+    rule: allow
+    port: 445
+    proto: "tcp"
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
+    - ubuntu
+    - avahi
+    - samba
+    - firewall
+    - ufw

@@ -1,2 +1,9 @@
 ---
-# defaults file for ns-home-nas
+sudo_users:
+  # generate shadow passwords with the following command...
+  # python -c 'import crypt; print crypt.crypt("password_goes_here", "$6$salt_goes_here$")'
+  # ...and put the resulting string in the `passwd` field below.
+  - username: username_goes_here
+    upasswd: unencrypted_passwd_goes_here
+    passwd: encrypted_password_hash_goes_here
+    uid: 1001

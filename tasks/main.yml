@@ -1,2 +1,8 @@
 ---
-# tasks file for ns-home-nas
+- name: os-specific tasks
+  include: 'os-{{ ansible_distribution }}.yml'
+  tags:
+    - linux
+    - nihilsum
+    - nas
+    - home
